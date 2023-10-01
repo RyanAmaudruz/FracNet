@@ -64,6 +64,9 @@ def main(args):
     databunch = DataBunch(dl_train, dl_val,
         collate_fn=FracNetTrainDataset.collate_fn)
 
+    # Initialise wandb
+    wandb.init()
+
     learn = Learner(
         databunch,
         model,
