@@ -4,8 +4,6 @@ def get_wandb_run_name(model_name, **kwargs):
 
     Args:
         model_name (str): The name of the model.
-        num_layers (int): The number of layers.
-        latent_dim (int): The dimension of the latent space.
         **kwargs: Additional keyword arguments for other parameters.
 
     Returns:
