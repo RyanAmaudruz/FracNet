@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=3
+#SBATCH --gpus=1
+#SBATCH --partition=gpu
+#SBATCH --time=40:00:00
+#SBATCH --job-name=train_fracnet_default
+#SBATCH --output=%x.out
+
+module purge
+module load 2022
+module load Anaconda3/2022.05
+
+# Activate the environment
+source activate fracnet
+
+# Move to fracnet directory
+cd $HOME/FracNet
+
+# Run the training script
+srun python main.py

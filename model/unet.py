@@ -5,6 +5,9 @@ import torch.nn as nn
 class UNet(nn.Module):
     def __init__(self, in_channels, num_classes, first_out_channels=16):
         super().__init__()
+        self.in_channels = in_channels
+        self.num_classes = num_classes
+        self.first_out_channels = first_out_channels
         self.first = ConvBlock(in_channels, first_out_channels)
         in_channels = first_out_channels
         self.down1 = Down(in_channels, 2 * in_channels)
@@ -32,6 +35,9 @@ class UNet(nn.Module):
         x  = self.up3(x, x1)
         x  = self.final(x)
         return x
+
+    def __str__(self):
+        return f'unet_in-{self.in_channels}_out-{self.num_classes}_fout-{self.first_out_channels}'
 
 
 class ConvBlock(nn.Sequential):
