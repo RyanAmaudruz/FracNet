@@ -1,13 +1,14 @@
 import os
 import torch
 import argparse
+import numpy as np
 import torch.nn as nn
 
 from functools import partial
 from torch import save
 
 from fastai.basic_train import Learner
-from fastai.train import ShowGraph
+from fastai.train import ShowGraph, SaveModelCallback
 from fastai.data_block import DataBunch
 from torch import optim
 
@@ -24,6 +25,8 @@ def main(args):
     val_image_dir = args.val_image_dir
     val_label_dir = args.val_label_dir
 
+    lr_max = 1e-1
+    epochs = 200
     batch_size = 4
     num_workers = 4
     optimizer = optim.SGD
@@ -33,8 +36,14 @@ def main(args):
     recall_partial = partial(recall, thresh=thresh)
     precision_partial = partial(precision, thresh=thresh)
     fbeta_score_partial = partial(fbeta_score, thresh=thresh)
+
+    # Accelerate training
+    GPU = torch.cuda.is_available()
+    device = torch.device("cuda" if GPU else "cpu")
  
     model = UNet(1, 1, first_out_channels=16)
+    model = model.to(device)
+    model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}.pt'
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model.cuda())
 
@@ -63,18 +72,16 @@ def main(args):
     )
 
     learn.fit_one_cycle(
-        200,
-        1e-1,
+        epochs,
+        lr_max,
         pct_start=0,
         div_factor=1000,
         callbacks=[
             ShowGraph(learn),
+            SaveModelCallback(learn, monitor='dice', mode='max', 
+                              name=os.path.join(model_weights_dir, model_weight_filename))
         ]
     )
-
-    if args.save_model:
-        save(model.module.state_dict(), "./model_weights.pth")
-
 
 if __name__ == "__main__":
     data_directory = os.path.join(os.getcwd(), "data")
@@ -82,6 +89,10 @@ if __name__ == "__main__":
     train_label_dir = os.path.join(data_directory, "train", "ribfrac-train-labels")
     val_image_dir = os.path.join(data_directory, "val", "ribfrac-val-images")
     val_label_dir = os.path.join(data_directory, "val", "ribfrac-val-labels")
+
+    # Model weights save dir
+    model_weights_dir = os.path.join(os.getcwd(), "weights")
+    os.makedirs(model_weights_dir, exist_ok=True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--train_image_dir",
@@ -92,7 +103,7 @@ if __name__ == "__main__":
         help="The validation image nii directory.", default=val_image_dir)
     parser.add_argument("--val_label_dir",
         help="The validation label nii directory.", default=val_label_dir)
-    parser.add_argument("--save_model", default=False,
+    parser.add_argument("--save_model", default=True,
         help="Whether to save the trained model.")
     args = parser.parse_args()
 
