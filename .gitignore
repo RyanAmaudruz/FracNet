@@ -132,3 +132,12 @@ dmypy.json
 
 # vscode settings
 .vscode/
+
+# data folder
+data/
+
+# model weights folder
+weights/
+
+# Out files
+*.out
