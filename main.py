@@ -69,7 +69,8 @@ def main(args):
         model,
         opt_func=optimizer,
         loss_func=criterion,
-        metrics=[dice, recall_partial, precision_partial, fbeta_score_partial]
+        metrics=[dice, recall_partial, precision_partial, fbeta_score_partial],
+        callback_fns=WandbCallback
     )
 
     learn.fit_one_cycle(
