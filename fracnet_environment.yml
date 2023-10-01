@@ -1,4 +1,4 @@
-name: fracnet-new
+name: fracnet
 channels:
   - conda-forge
   - defaults

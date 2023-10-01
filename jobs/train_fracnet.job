@@ -13,7 +13,7 @@ module load 2022
 module load Anaconda3/2022.05
 
 # Activate the environment
-source activate fracnet-new
+source activate fracnet
 
 # Move to fracnet directory
 cd $HOME/FracNet
