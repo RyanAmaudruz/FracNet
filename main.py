@@ -43,7 +43,7 @@ def main(args):
  
     model = UNet(1, 1, first_out_channels=16)
     model = model.to(device)
-    model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}.pt'
+    model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}'
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model.cuda())
 
