@@ -1,4 +1,4 @@
-name: ribfrac
+name: fracnet-new
 channels:
   - conda-forge
   - defaults
