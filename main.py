@@ -3,7 +3,8 @@ import torch
 import argparse
 import numpy as np
 import torch.nn as nn
-
+import wandb
+from wandb.fastai import WandbCallback
 from functools import partial
 from torch import save
 

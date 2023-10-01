@@ -141,3 +141,6 @@ weights/
 
 # Out files
 *.out
+
+# Pycharm cache
+.idea/
