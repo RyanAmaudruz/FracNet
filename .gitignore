@@ -144,3 +144,6 @@ weights/
 
 # Pycharm cache
 .idea/
+
+# Wandb cache
+.wandb/
