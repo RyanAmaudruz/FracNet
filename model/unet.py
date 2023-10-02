@@ -10,12 +10,12 @@ class UNet(nn.Module):
         self.first_out_channels = first_out_channels
         self.first = ConvBlock(in_channels, first_out_channels)
         in_channels = first_out_channels
-        self.down1 = Down(in_channels, 2 * in_channels)
-        self.down2 = Down(2 * in_channels, 4 * in_channels)
-        self.down3 = Down(4 * in_channels, 8 * in_channels)
-        self.up1   = Up(8 * in_channels, 4 * in_channels)
-        self.up2   = Up(4 * in_channels, 2 * in_channels)
-        self.up3   = Up(2 * in_channels, in_channels)
+        self.down1 = Down(in_channels, 2 * in_channels)     # 16 -> 32
+        self.down2 = Down(2 * in_channels, 4 * in_channels) # 32 -> 64
+        self.down3 = Down(4 * in_channels, 8 * in_channels) # 64 -> 128
+        self.up1   = Up(8 * in_channels, 4 * in_channels)   # 128 -> 64
+        self.up2   = Up(4 * in_channels, 2 * in_channels)   # 64 -> 32
+        self.up3   = Up(2 * in_channels, in_channels)       # 32 -> 16
         self.final = nn.Conv3d(in_channels, num_classes, 1)
 
         for m in self.modules():
@@ -26,14 +26,14 @@ class UNet(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
-        x1 = self.first(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x  = self.up1(x4, x3)
-        x  = self.up2(x, x2)
-        x  = self.up3(x, x1)
-        x  = self.final(x)
+        x1 = self.first(x)      # 2 (Conv 3x3x3, BN, LReLU)
+        x2 = self.down1(x1)     # 16 -> 32
+        x3 = self.down2(x2)     # 32 -> 64
+        x4 = self.down3(x3)     # 64 -> 128
+        x  = self.up1(x4, x3)   # 128 -> 64
+        x  = self.up2(x, x2)    # 64 -> 32
+        x  = self.up3(x, x1)    # 32 -> 16
+        x  = self.final(x)      # Conv 3x3x3
         return x
 
     def __str__(self):

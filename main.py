@@ -3,7 +3,8 @@ import torch
 import argparse
 import numpy as np
 import torch.nn as nn
-
+import wandb
+from wandb.fastai import WandbCallback
 from functools import partial
 from torch import save
 
@@ -17,7 +18,7 @@ from dataset import transforms as tsfm
 from utils.metrics import dice, recall, precision, fbeta_score
 from model.unet import UNet
 from model.losses import MixLoss, DiceLoss
-
+from utils import get_wandb_run_name
 
 def main(args):
     train_image_dir = args.train_image_dir
@@ -63,12 +64,25 @@ def main(args):
     databunch = DataBunch(dl_train, dl_val,
         collate_fn=FracNetTrainDataset.collate_fn)
 
+    # Creating the run name based on model name and parser args (ToDo)
+    config = {}
+    wandb_run_name = get_wandb_run_name(
+        model_name='fracnet',
+        **config
+        # Extra wandb filename parameters are now supported.
+    )
+
+    wandb.init(project='ai4med', entity='msc-ai',
+               config=config, reinit=True, name=wandb_run_name,
+               tags=['latest'])
+
     learn = Learner(
         databunch,
         model,
         opt_func=optimizer,
         loss_func=criterion,
-        metrics=[dice, recall_partial, precision_partial, fbeta_score_partial]
+        metrics=[dice, recall_partial, precision_partial, fbeta_score_partial],
+        callback_fns=WandbCallback
     )
 
     learn.fit_one_cycle(

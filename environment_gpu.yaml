@@ -21,4 +21,5 @@ dependencies:
     - pandas==0.25.3
     - scikit-image==0.16.2
     - tqdm==4.38.0
+    - wandb
 
