@@ -14,4 +14,4 @@ module load Anaconda3/2022.05
 
 parent_dir=$(cd "$PWD/.."; pwd)
 
-conda env create -f $parent_dir/environment_gpu.yml
+conda env create -f $parent_dir/environment_gpu.yaml
