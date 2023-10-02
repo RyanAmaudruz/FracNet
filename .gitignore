@@ -146,4 +146,4 @@ weights/
 .idea/
 
 # Wandb cache
-.wandb/
+wandb/
