@@ -56,14 +56,33 @@ def main(args):
         tsfm.Window(-200, 1000),
         tsfm.MinMaxNorm(-200, 1000)
     ]
+
     ds_train = FracNetTrainDataset(train_image_dir, train_label_dir,
-        transforms=transforms)
-    dl_train = FracNetTrainDataset.get_dataloader(ds_train, batch_size, False,
-        num_workers)
+                                   transforms=transforms)
     ds_val = FracNetTrainDataset(val_image_dir, val_label_dir,
-        transforms=transforms)
-    dl_val = FracNetTrainDataset.get_dataloader(ds_val, batch_size, False,
-        num_workers)
+                                 transforms=transforms)
+
+    if not args.light_train:
+        dl_train = FracNetTrainDataset.get_dataloader(ds_train, batch_size, False,
+                                                      num_workers)
+        dl_val = FracNetTrainDataset.get_dataloader(ds_val, batch_size, False,
+                                                    num_workers)
+    else:
+        # Keep 20% of the data for training and validation
+        keep_prob = 0.1
+        # Load the full dataset and then randomly sample 20% of the data
+        subset_indices_train = np.random.choice(len(ds_train), size=int(len(ds_train)*keep_prob), replace=False)  # 20% of training data
+        subset_indices_val = np.random.choice(len(ds_val), size=int(len(ds_val)*keep_prob), replace=False)  # 20% of validation data
+        
+        # Create the subset of the dataset
+        ds_train_subset = torch.utils.data.Subset(ds_train, subset_indices_train)
+        ds_val_subset = torch.utils.data.Subset(ds_val, subset_indices_val)
+        
+        # Create the dataloaders
+        dl_train = FracNetTrainDataset.get_dataloader(ds_train_subset, batch_size, False, num_workers)
+        dl_val = FracNetTrainDataset.get_dataloader(ds_val_subset, batch_size, False, num_workers)
+
+        print(f"\nTraining on {len(ds_train_subset)} images, validating on {len(ds_val_subset)} images.")
 
     databunch = DataBunch(dl_train, dl_val,
         collate_fn=FracNetTrainDataset.collate_fn)
@@ -79,15 +98,19 @@ def main(args):
     config['in_channels'] = in_channels
     config['out_channels'] = out_channels
     config['first_out_channels'] = first_out_channels
+    config['light_train'] = args.light_train
 
     wandb_run_name = get_wandb_run_name(
         model_name='fracnet',
         # Extra wandb filename parameters are now supported.
     )
 
+    # tags to indicate whether the run is a light train or not
+    # light train runs are experimental and should be fileterd out
+    tags = ['light train'] if args.light_train else ['latest']
     wandb.init(project='ai4med', entity='msc-ai',
                config=config, reinit=True, name=wandb_run_name,
-               tags=['latest'])
+               tags=tags)
 
     learn = Learner(
         databunch,
@@ -98,6 +121,10 @@ def main(args):
         callback_fns=WandbCallback
     )
 
+    # Saving the model weights via callback if the flag is set
+    save_model_callback = SaveModelCallback(learn, monitor='dice', mode='max', 
+                                            name=os.path.join(model_weights_dir, model_weight_filename))
+
     learn.fit_one_cycle(
         epochs,
         lr_max,
@@ -105,9 +132,7 @@ def main(args):
         div_factor=1000,
         callbacks=[
             ShowGraph(learn),
-            SaveModelCallback(learn, monitor='dice', mode='max', 
-                              name=os.path.join(model_weights_dir, model_weight_filename))
-        ]
+            ].append([save_model_callback] if args.save_model else [])
     )
 
 if __name__ == "__main__":
@@ -122,6 +147,8 @@ if __name__ == "__main__":
     os.makedirs(model_weights_dir, exist_ok=True)
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--light_train", action="store_true", default=False,
+                        help="Whether to use light mode for training.")
     parser.add_argument("--epochs", type=int, default=200,
                         help="Number of epochs.")
     parser.add_argument("--batch_size", type=int, default=4,
