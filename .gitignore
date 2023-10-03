@@ -147,5 +147,3 @@ weights/
 
 # Wandb cache
 wandb/
-
-wandb/settings
