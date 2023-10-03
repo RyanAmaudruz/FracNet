@@ -39,10 +39,13 @@ def main(args):
     fbeta_score_partial = partial(fbeta_score, thresh=thresh)
 
     # Accelerate training
-    GPU = torch.cuda.is_available()
-    device = torch.device("cuda" if GPU else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
  
-    model = UNet(1, 1, first_out_channels=16)
+    # Model configuration
+    in_channels = 1
+    out_channels = 1
+    first_out_channels = 16
+    model = UNet(in_channels, out_channels, first_out_channels)
     model = model.to(device)
     model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}'
     if torch.cuda.device_count() > 1:
@@ -66,9 +69,18 @@ def main(args):
 
     # Creating the run name based on model name and parser args (ToDo)
     config = {}
+    config['batch_size'] = batch_size
+    config['epochs'] = epochs
+    config['lr_max'] = lr_max
+    config['optimizer'] = optimizer
+    config['criterion'] = criterion
+    config['thresh'] = thresh
+    config['in_channels'] = 1
+    config['out_channels'] = 1
+    config['first_out_channels'] = 16
+
     wandb_run_name = get_wandb_run_name(
         model_name='fracnet',
-        **config
         # Extra wandb filename parameters are now supported.
     )
 

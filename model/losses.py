@@ -22,6 +22,9 @@ class MixLoss(nn.Module):
                 lfw.append(v)
         mx = sum([w * l(x, y) for l, w in zip(lf, lfw)])
         return mx
+    
+    def __str__(self):
+        return 'MixLoss(' + ', '.join([str(str(l) + '*' + str(w)) for (l, w) in zip(self.args[::2], self.args[1::2])]) + ')'
 
 
 class DiceLoss(nn.Module):
@@ -36,6 +39,9 @@ class DiceLoss(nn.Module):
         dc = (2 * i + 1) / (u + 1)
         dc = 1 - dc.mean()
         return dc
+
+    def __str__(self):
+        return f'DiceLoss(image={self.image})'
 
 
 class GHMCLoss(nn.Module):
@@ -70,6 +76,9 @@ class GHMCLoss(nn.Module):
         gc = F.binary_cross_entropy_with_logits(x, y, w, reduction='sum') / t
         return gc
 
+    def __str__(self):
+        return f'GHMCLoss(mmt={self.mmt}, bins={self.bins})'
+
 
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2):
@@ -81,3 +90,6 @@ class FocalLoss(nn.Module):
         ce = F.binary_cross_entropy_with_logits(x, y)
         fc = self.alpha * (1 - torch.exp(-ce)) ** self.gamma * ce
         return fc
+
+    def __str__(self):
+        return f'FocalLoss(alpha={self.alpha}, gamma={self.gamma})'
