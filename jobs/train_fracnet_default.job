@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=18
+#SBATCH --cpus-per-task=3
 #SBATCH --gpus=1
 #SBATCH --partition=gpu
 #SBATCH --time=40:00:00
-#SBATCH --job-name=train_fracnet_batch_exp_18cpus
+#SBATCH --job-name=train_fracnet_default
 #SBATCH --output=%x.out
 
 module purge
@@ -22,4 +22,4 @@ cd $HOME/FracNet
 wandb online
 
 # Run the training script
-srun python main.py --batch_size 10
+srun python main.py
