@@ -18,7 +18,7 @@ from dataset.fracnet_dataset import FracNetTrainDataset
 from dataset import transforms as tsfm
 from utils.metrics import dice, recall, precision, fbeta_score
 from model.unet import UNet
-from model.losses import MixLoss, DiceLoss
+from model.losses import MixLoss, DiceLoss, FocalLoss
 from utils import get_wandb_run_name
 
 def main(args):
@@ -32,7 +32,11 @@ def main(args):
     batch_size = args.batch_size
     num_workers = args.num_workers
     optimizer = optim.SGD
-    criterion = MixLoss(nn.BCEWithLogitsLoss(), 0.5, DiceLoss(), 1)
+    
+    if args.loss == "mix":
+        criterion = MixLoss(nn.BCEWithLogitsLoss(), 0.5, DiceLoss(), 1)
+    elif args.loss == "focal":
+        criterion = FocalLoss()
 
     thresh = args.thresh
     recall_partial = partial(recall, thresh=thresh)
@@ -148,6 +152,8 @@ if __name__ == "__main__":
                         help="The validation label nii directory.", default=val_label_dir)
     parser.add_argument("--save_model", default=True,
                         help="Whether to save the trained model.")
+    parser.add_argument("--loss", default="mix",
+                        help="The loss function to use.", choices=["mix", "dice", "ghmc", "focal"])
     args = parser.parse_args()
 
     print(args)
