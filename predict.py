@@ -167,7 +167,7 @@ class FakeArgs:
         self.prob_thresh = 0.1
         self.bone_thresh = 300
         self.size_thresh = 100
-        self.postprocess = True
+        self.postprocess = 'True'
 
 
 
