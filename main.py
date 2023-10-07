@@ -19,6 +19,7 @@ from dataset import transforms as tsfm
 from utils.metrics import dice, recall, precision, fbeta_score
 from model.unet import UNet
 from model.losses import MixLoss, DiceLoss, FocalLoss
+from model.unified_focal_loss import SymmetricUnifiedFocalLoss, AsymmetricUnifiedFocalLoss
 from utils import get_wandb_run_name
 
 def main(args):
@@ -32,11 +33,15 @@ def main(args):
     batch_size = args.batch_size
     num_workers = args.num_workers
     optimizer = optim.SGD
-    
-    if args.loss == "mix":
+        
+    if args.loss == "focal":
+        criterion = FocalLoss(alpha=0.25, gamma=2)
+    elif args.loss == "sym_unified":
+        criterion = SymmetricUnifiedFocalLoss(weight=0.5, delta=0.6, gamma=0.5)
+    elif args.loss == "asym_unified":
+        criterion = AsymmetricUnifiedFocalLoss(weight=0.5, delta=0.6, gamma=0.2)
+    else:
         criterion = MixLoss(nn.BCEWithLogitsLoss(), 0.5, DiceLoss(), 1)
-    elif args.loss == "focal":
-        criterion = FocalLoss()
 
     thresh = args.thresh
     recall_partial = partial(recall, thresh=thresh)
@@ -52,7 +57,7 @@ def main(args):
     first_out_channels = args.first_out_channels
     model = UNet(in_channels, out_channels, first_out_channels)
     model = model.to(device)
-    model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}'
+    model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}_loss-{args.loss}.pth'
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model.cuda())
 
@@ -85,7 +90,7 @@ def main(args):
     config['first_out_channels'] = first_out_channels
 
     wandb_run_name = get_wandb_run_name(
-        model_name='fracnet',
+        model_name='fracnet-unified',
         # Extra wandb filename parameters are now supported.
     )
 
@@ -153,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_model", default=True,
                         help="Whether to save the trained model.")
     parser.add_argument("--loss", default="mix",
-                        help="The loss function to use.", choices=["mix", "dice", "ghmc", "focal"])
+                        help="The loss function to use.", choices=["mix", "dice", "ghmc", "focal", "sym_unified", "asym_unified"])
     args = parser.parse_args()
 
     print(args)
