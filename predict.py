@@ -159,28 +159,44 @@ def predict(args):
         index=False)
 
 
+class FakeArgs:
+    def __init__(self):
+        self.image_dir = '/gpfs/home4/scur0542/FracNet/data/test/ribfrac-test-images/'
+        self.pred_dir = '/gpfs/home4/scur0542/FracNet/data/test/preds/gaussian_noise/'
+        self.model_path = '/gpfs/home4/scur0542/FracNet/weights/unet_in-1_out-1_fout-16_batch-4_epoch-200_lr-0.1.pth'
+        self.prob_thresh = 0.1
+        self.bone_thresh = 300
+        self.size_thresh = 100
+        self.postprocess = True
+
+
+
 if __name__ == "__main__":
-    import argparse
-
-
+    # import argparse
+    #
+    #
     prob_thresh = 0.1
     bone_thresh = 300
     size_thresh = 100
+    #
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--image_dir", required=True,
+    #     help="The image nii directory.")
+    # parser.add_argument("--pred_dir", required=True,
+    #     help="The directory for saving predictions.")
+    # parser.add_argument("--model_path", default=None,
+    #     help="The PyTorch model weight path.")
+    # parser.add_argument("--prob_thresh", default=0.1,
+    #     help="Prediction probability threshold.")
+    # parser.add_argument("--bone_thresh", default=300,
+    #     help="Bone binarization threshold.")
+    # parser.add_argument("--size_thresh", default=100,
+    #     help="Prediction size threshold.")
+    # parser.add_argument("--postprocess", default="True",
+    #     help="Whether to execute post-processing.")
+    # args = parser.parse_args()
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image_dir", required=True,
-        help="The image nii directory.")
-    parser.add_argument("--pred_dir", required=True,
-        help="The directory for saving predictions.")
-    parser.add_argument("--model_path", default=None,
-        help="The PyTorch model weight path.")
-    parser.add_argument("--prob_thresh", default=0.1,
-        help="Prediction probability threshold.")
-    parser.add_argument("--bone_thresh", default=300,
-        help="Bone binarization threshold.")
-    parser.add_argument("--size_thresh", default=100,
-        help="Prediction size threshold.")
-    parser.add_argument("--postprocess", default="True",
-        help="Whether to execute post-processing.")
-    args = parser.parse_args()
+    args = FakeArgs()
+
+
     predict(args)
