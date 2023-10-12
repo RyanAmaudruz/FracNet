@@ -13,6 +13,151 @@ from tqdm import tqdm
 from dataset.fracnet_dataset import FracNetInferenceDataset
 from dataset import transforms as tsfm
 from model.unet import UNet
+import SimpleITK as sitk
+
+
+
+def _get_max_area(imbin):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    labs = label(imbin)
+    rpps = sorted(regionprops(labs), key=lambda p: p.area)
+    mask = labs == rpps[-1].label
+
+    return mask
+
+def thorax_mask_pipeline(x):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    x = _get_max_area(ndimage.binary_fill_holes(x))
+
+def _get_thorax_mask(image):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    mask = image > -200
+    mask = [ndimage.binary_fill_holes(x) for x in mask]
+    mask = [_get_max_area(x) for x in mask]
+    mask = [mask[i] * (image[i] < -400) for i in range(len(mask))]
+    mask = np.stack([ndimage.binary_fill_holes(x) for x in mask])
+    return mask
+
+
+def _rescale(arr, target_shape, interpolation=0):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    target_shape = target_shape[::-1]
+    arr = sitk.GetImageFromArray(arr.astype(np.uint8))
+    old_spacing = arr.GetSpacing()
+    old_shape = arr.GetSize()
+    target_spacing = tuple([old_spacing[i] * old_shape[i] / target_shape[i]
+                            for i in range(len(target_shape))])
+
+    resample = sitk.ResampleImageFilter()
+    interpolator = sitk.sitkLinear if interpolation == 1 \
+        else sitk.sitkNearestNeighbor
+    resample.SetInterpolator(interpolator)
+    resample.SetOutputSpacing(target_spacing)
+    resample.SetSize(target_shape)
+    new_arr = resample.Execute(arr)
+
+    return sitk.GetArrayFromImage(new_arr).astype(np.bool)
+
+
+def _get_lung_mask(image, shrink_ratio):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    mask = _get_thorax_mask(image)
+    old_shape = image.shape
+    target_shape = tuple([round(dim * shrink_ratio) for dim in old_shape])
+    mask = _rescale(mask, target_shape)
+
+    labs = label(mask)
+    rpps = sorted(regionprops(labs), key=lambda p: p.area)
+    mask = labs == rpps[-1].label
+
+    if rpps[-2].area > rpps[-1].area / 2:
+        mask = mask | (labs == rpps[-2].label)
+
+    xpix = mask.sum((0, 1))
+    labs = label(xpix < xpix.mean())
+    xcrg = np.where(labs == labs[len(labs) // 2])[0]
+
+    tube = []
+    for chil in mask:
+        chil = ndimage.binary_erosion(chil, disk(3))
+        labs = label(chil)
+        rpps = regionprops(labs)
+        for p in rpps:
+            x = int(p.centroid[-1])
+            labs[labs == p.label] = 0 if x not in xcrg else p.label
+        tube.append(ndimage.binary_dilation(labs > 0, disk(3)))
+    tube = np.stack(tube)
+
+    mask = mask * (tube == 0)
+    mask = np.stack([ndimage.binary_closing(x, disk(10)) for x in mask])
+    mask = _get_max_area(mask)
+
+    return mask
+
+
+def _get_lung_contour(image, shrink_ratio):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    old_shape = image.shape
+    lung_mask = _get_lung_mask(image, shrink_ratio)
+    lung_contour = np.logical_xor(ndimage.maximum_filter(lung_mask, 10),
+                                  lung_mask)
+    lung_contour = _rescale(lung_contour, old_shape)
+    return lung_contour
+
+
+def _remove_non_rib_pred(pred, image, shrink_ratio):
+    """
+    Implementation by Kaiming Kuang <kaiming.kuang@dianei-ai.com>	14 Dec 2020 at 04:33
+
+    :param imbin:
+    :return:
+    """
+    # transpose the image and prediction from xyz to zyx
+    pred = pred.transpose(2, 1, 0)
+    image = image.transpose(2, 1, 0)
+
+
+    lung_contour = _get_lung_contour(image, shrink_ratio)
+
+    pred = np.where(lung_contour, pred, 0)
+
+    # transpose them back
+    pred = pred.transpose(2, 1, 0)
+    image = image.transpose(2, 1, 0)
+
+    return pred
+
+
 
 
 def _remove_low_probs(pred, prob_thresh):
@@ -54,6 +199,9 @@ def _remove_small_objects(pred, size_thresh):
 
 
 def _post_process(pred, image, prob_thresh, bone_thresh, size_thresh):
+
+    # remove non-rib predictions
+    pred = _remove_non_rib_pred(pred, image, 0.25)
 
     # remove connected regions with low confidence
     pred = _remove_low_probs(pred, prob_thresh)
@@ -125,7 +273,7 @@ def predict(args):
     model.eval()
     if args.model_path is not None:
         model_weights = torch.load(args.model_path)
-        model.load_state_dict(model_weights)
+        model.load_state_dict(model_weights['model'])
     model = nn.DataParallel(model).cuda()
 
     transforms = [
@@ -149,38 +297,54 @@ def predict(args):
         pred_image, pred_info = _make_submission_files(pred_arr, image_id,
             dataset.image_affine)
         pred_info_list.append(pred_info)
-        pred_path = os.path.join(args.pred_dir, f"{image_id}_pred.nii.gz")
+        pred_path = os.path.join(args.pred_dir, f"{image_id}-label.nii.gz")
         nib.save(pred_image, pred_path)
 
         progress.update()
 
     pred_info = pd.concat(pred_info_list, ignore_index=True)
-    pred_info.to_csv(os.path.join(args.pred_dir, "pred_info.csv"),
+    pred_info.to_csv(os.path.join(args.pred_dir, "ribfrac-test-pred.csv"),
         index=False)
+
+class FakeArgs:
+    def __init__(self):
+        self.image_dir = '/home/ryan/PycharmProjects/FracNet/data/test/ribfrac-test-images/'
+        self.pred_dir = '/home/ryan/PycharmProjects/FracNet/data/test/pred/batch_16_w_post/'
+        self.model_path = '/home/ryan/Downloads/bestmodel.pth'
+        self.prob_thresh = 0.1
+        self.bone_thresh = 300
+        self.size_thresh = 100
+        self.postprocess = 'True'
+
 
 
 if __name__ == "__main__":
-    import argparse
-
-
+    # import argparse
+    #
+    #
     prob_thresh = 0.1
     bone_thresh = 300
     size_thresh = 100
+    #
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--image_dir", required=True,
+    #     help="The image nii directory.")
+    # parser.add_argument("--pred_dir", required=True,
+    #     help="The directory for saving predictions.")
+    # parser.add_argument("--model_path", default=None,
+    #     help="The PyTorch model weight path.")
+    # parser.add_argument("--prob_thresh", default=0.1,
+    #     help="Prediction probability threshold.")
+    # parser.add_argument("--bone_thresh", default=300,
+    #     help="Bone binarization threshold.")
+    # parser.add_argument("--size_thresh", default=100,
+    #     help="Prediction size threshold.")
+    # parser.add_argument("--postprocess", default="True",
+    #     help="Whether to execute post-processing.")
+    # args = parser.parse_args()
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image_dir", required=True,
-        help="The image nii directory.")
-    parser.add_argument("--pred_dir", required=True,
-        help="The directory for saving predictions.")
-    parser.add_argument("--model_path", default=None,
-        help="The PyTorch model weight path.")
-    parser.add_argument("--prob_thresh", default=0.1,
-        help="Prediction probability threshold.")
-    parser.add_argument("--bone_thresh", default=300,
-        help="Bone binarization threshold.")
-    parser.add_argument("--size_thresh", default=100,
-        help="Prediction size threshold.")
-    parser.add_argument("--postprocess", default="True",
-        help="Whether to execute post-processing.")
-    args = parser.parse_args()
+    args = FakeArgs()
+
+
     predict(args)
+
