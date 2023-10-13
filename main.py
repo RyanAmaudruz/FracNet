@@ -80,8 +80,12 @@ def main(args):
     config['out_channels'] = out_channels
     config['first_out_channels'] = first_out_channels
 
+    # config = {
+    #     'model_type': 'diffunet-test'
+    # }
     wandb_run_name = get_wandb_run_name(
-        model_name='fracnet',
+        model_name='fracnet-diffunet',
+        **config
         # Extra wandb filename parameters are now supported.
     )
 
