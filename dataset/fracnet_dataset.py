@@ -74,14 +74,45 @@ class FracNetTrainDataset(Dataset):
 
         return sym_neg_centroids + spine_neg_centroids
 
-    def _get_roi_centroids(self, label_arr):
+
+    @staticmethod
+    def get_roi_coordinates(img_arr, centroid, crop_size=64):
+        src_beg = [max(0, centroid[i] - crop_size // 2) for i in range(len(centroid))]
+        src_end = [min(img_arr.shape[i], centroid[i] + crop_size // 2) for i in range(len(centroid))]
+        dst_beg = [max(0, crop_size // 2 - centroid[i]) for i in range(len(centroid))]
+        dst_end = [min(img_arr.shape[i] - (centroid[i] - crop_size // 2), crop_size) for i in range(len(centroid))]
+        return src_beg, src_end, dst_beg, dst_end
+
+    def _new_get_neg_centroids(self, image_arr, n_centroids=10):
+        new_neg_centroids = []
+        for _ in range(n_centroids):
+            while True:
+                x = np.random.randint(low=33, high=image_arr.shape[0]-33)
+                y = np.random.randint(low=33, high=image_arr.shape[1]-33)
+                z = np.random.randint(low=33, high=image_arr.shape[2]-33)
+                src_beg, src_end, dst_beg, dst_end = self.get_roi_coordinates(image_arr, (x, y, z))
+                temp_arr = image_arr[
+                           src_beg[0]:src_end[0],
+                           src_beg[1]:src_end[1],
+                           src_beg[2]:src_end[2],
+                           ]
+                if temp_arr.max() > 300:
+                    new_neg_centroids.append(tuple([x, y, z]))
+                    break
+        return new_neg_centroids
+
+    def _get_roi_centroids(self, image_arr, label_arr):
         if self.train:
             # generate positive samples' centroids
             pos_centroids = self._get_pos_centroids(label_arr)
 
-            # generate negative samples' centroids
-            neg_centroids = self._get_neg_centroids(pos_centroids,
-                label_arr.shape)
+            # # generate negative samples' centroids
+            neg_centroids = self._get_neg_centroids(pos_centroids, label_arr.shape)
+
+            neg_centroids += self._new_get_neg_centroids(image_arr, n_centroids=len(neg_centroids))
+
+            # neg_centroids = self._new_get_neg_centroids(image_arr)
+
 
             # sample positives and negatives when necessary
             num_pos = len(pos_centroids)
