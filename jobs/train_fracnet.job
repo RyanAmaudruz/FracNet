@@ -13,10 +13,10 @@ module load 2022
 module load Anaconda3/2022.05
 
 # Activate the environment
-source activate fracnet
+source activate ribfrac
 
 # Move to fracnet directory
-cd $HOME/FracNet
+#cd $HOME/FracNet
 
 # Log with wandb
 wandb online

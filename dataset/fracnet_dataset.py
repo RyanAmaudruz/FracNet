@@ -26,8 +26,18 @@ class FracNetTrainDataset(Dataset):
 
     @staticmethod
     def _get_pos_centroids(label_arr):
-        centroids = [tuple([round(x) for x in prop.centroid])
-            for prop in regionprops(label_arr)]
+        # centroids = [tuple([round(x)  for x in prop.centroid]) for prop in regionprops(label_arr)]
+        label_arr_shape = label_arr.shape
+        centroids = []
+        for prop in regionprops(label_arr):
+            centroids_with_random = []
+            for i, x in enumerate(prop.centroid):
+                while True:
+                    candidate = round(x + np.random.normal(0, 10))
+                    if 0 < candidate < label_arr_shape[i]:
+                        centroids_with_random.append(candidate)
+                        break
+            centroids.append(tuple(centroids_with_random))
 
         return centroids
 
@@ -138,6 +148,8 @@ class FracNetTrainDataset(Dataset):
         label = nib.load(label_path)
         image_arr = image.get_fdata().astype(np.float)
         label_arr = label.get_fdata().astype(np.uint8)
+
+        image_arr += int(np.random.normal(0, 10))
 
         # calculate rois' centroids
         roi_centroids = self._get_roi_centroids(label_arr)
