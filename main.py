@@ -31,7 +31,7 @@ def main(args):
     epochs = args.epochs
     batch_size = args.batch_size
     num_workers = args.num_workers
-    optimizer = optim.SGD
+
     criterion = MixLoss(nn.BCEWithLogitsLoss(), 0.5, DiceLoss(), 1)
 
     thresh = args.thresh
@@ -48,6 +48,7 @@ def main(args):
     first_out_channels = args.first_out_channels
     model = UNet(in_channels, out_channels, first_out_channels)
     model = model.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}'
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model.cuda())
@@ -121,34 +122,50 @@ if __name__ == "__main__":
     model_weights_dir = os.path.join(os.getcwd(), "weights")
     os.makedirs(model_weights_dir, exist_ok=True)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=200,
-                        help="Number of epochs.")
-    parser.add_argument("--batch_size", type=int, default=4,
-                        help="Batch size.")
-    parser.add_argument("--num_workers", type=int, default=4,
-                        help="Number of workers.")
-    parser.add_argument("--lr_max", type=float, default=1e-1,
-                        help="Maximum learning rate.")
-    parser.add_argument("--thresh", type=float, default=0.1,
-                        help="Threshold for metrics.")
-    parser.add_argument("--in_channels", type=int, default=1,
-                        help="Number of input channels.")
-    parser.add_argument("--out_channels", type=int, default=1,
-                        help="Number of output channels.")
-    parser.add_argument("--first_out_channels", type=int, default=16,
-                        help="Number of first output channels.")
-    parser.add_argument("--train_image_dir",
-                        help="The training image nii directory.", default=train_image_dir)
-    parser.add_argument("--train_label_dir",
-                        help="The training label nii directory.", default=train_label_dir)
-    parser.add_argument("--val_image_dir",
-                        help="The validation image nii directory.", default=val_image_dir)
-    parser.add_argument("--val_label_dir",
-                        help="The validation label nii directory.", default=val_label_dir)
-    parser.add_argument("--save_model", default=True,
-                        help="Whether to save the trained model.")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--epochs", type=int, default=250,
+    #                     help="Number of epochs.")
+    # parser.add_argument("--batch_size", type=int, default=4,
+    #                     help="Batch size.")
+    # parser.add_argument("--num_workers", type=int, default=4,
+    #                     help="Number of workers.")
+    # parser.add_argument("--lr_max", type=float, default=1e-1,
+    #                     help="Maximum learning rate.")
+    # parser.add_argument("--thresh", type=float, default=0.1,
+    #                     help="Threshold for metrics.")
+    # parser.add_argument("--in_channels", type=int, default=1,
+    #                     help="Number of input channels.")
+    # parser.add_argument("--out_channels", type=int, default=1,
+    #                     help="Number of output channels.")
+    # parser.add_argument("--first_out_channels", type=int, default=16,
+    #                     help="Number of first output channels.")
+    # parser.add_argument("--train_image_dir",
+    #                     help="The training image nii directory.", default=train_image_dir)
+    # parser.add_argument("--train_label_dir",
+    #                     help="The training label nii directory.", default=train_label_dir)
+    # parser.add_argument("--val_image_dir",
+    #                     help="The validation image nii directory.", default=val_image_dir)
+    # parser.add_argument("--val_label_dir",
+    #                     help="The validation label nii directory.", default=val_label_dir)
+    # parser.add_argument("--save_model", default=True,
+    #                     help="Whether to save the trained model.")
+    # args = parser.parse_args()
+    #
+    # print(args)
 
-    print(args)
+
+    class FakeArgs:
+        def __init__(self):
+            self.train_image_dir = '/gpfs/home4/scur0542/FracNet/data/train/ribfrac-train-images/'
+            self.train_label_dir = '/gpfs/home4/scur0542/FracNet/data/train/ribfrac-train-labels/'
+            self.val_image_dir = '/gpfs/home4/scur0542/FracNet/data/val/ribfrac-val-images/'
+            self.val_label_dir = '/gpfs/home4/scur0542/FracNet/data/val/ribfrac-val-labels/'
+            self.save_model = True
+            self.batch_size = 32
+            self.epochs = 250
+
+    args = FakeArgs()
+
+
     main(args)
+
