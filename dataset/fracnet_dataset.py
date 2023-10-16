@@ -183,7 +183,7 @@ class FracNetTrainDataset(Dataset):
         image_arr += int(np.random.normal(0, 10))
 
         # calculate rois' centroids
-        roi_centroids = self._get_roi_centroids(label_arr)
+        roi_centroids = self._get_roi_centroids(image_arr, label_arr)
 
         # crop rois
         image_rois = [self._crop_roi(image_arr, centroid)
