@@ -161,7 +161,7 @@ if __name__ == "__main__":
             self.val_image_dir = '/gpfs/home4/scur0542/FracNet/data/val/ribfrac-val-images/'
             self.val_label_dir = '/gpfs/home4/scur0542/FracNet/data/val/ribfrac-val-labels/'
             self.save_model = True
-            self.batch_size = 32
+            self.batch_size = 16
             self.epochs = 250
             self.lr_max = 0.1
             self.num_workers = 4

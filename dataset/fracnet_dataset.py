@@ -180,6 +180,10 @@ class FracNetTrainDataset(Dataset):
         image_arr = image.get_fdata().astype(np.float)
         label_arr = label.get_fdata().astype(np.uint8)
 
+        if np.random.rand() > 0.5:
+            image_arr = np.flip(image_arr, 0)
+            label_arr = np.flip(label_arr, 0)
+
         image_arr += int(np.random.normal(0, 10))
 
         # calculate rois' centroids
