@@ -17,6 +17,10 @@ For more details, please refer to our paper:
 
 EBioMedicine, 2020 ([DOI](https://doi.org/10.1016/j.ebiom.2020.103106))
 
+![Alt Text](visualisations/ori_pos_sampling_viz-axial.gif)
+
+![Alt Text](visualisations/mod_pos_sampling_viz-axial.gif)
+
 ## Code Structure
 * FracNet/
     * [`dataset/`](./dataset): PyTorch dataset and transforms.
