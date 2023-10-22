@@ -1,4 +1,15 @@
-# FracNet
+# ROBUST FRACNET: LEARNING TO DETECT RIB FRACTURES WITH NOISE
+
+This repo is a fork of https://github.com/M3DV/FracNet.
+
+Our contributions are the following:
+
+- Created visualisations of the scans, fractures and predictions
+- Developed a new positive sampling strategy
+- Developed a new negative sampling strategy
+- Added a constant gaussian noise augmentation
+
+
 
 ## Abstract
 **Background**: Diagnosis of rib fractures plays an important role in identifying trauma severity. However, quickly and precisely identifying the rib fractures in a large number of CT images with increasing number of patients is a tough task, which is also subject to the qualification of radiologist. We aim at a clinically applicable automatic system for rib fracture detection and segmentation from CT scans.
