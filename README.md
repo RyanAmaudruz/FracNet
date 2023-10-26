@@ -1,102 +1,86 @@
 # ROBUST FRACNET: LEARNING TO DETECT RIB FRACTURES WITH NOISE
 
-This repo is a fork of https://github.com/M3DV/FracNet.
 
-Our contributions are the following:
-
-- Created visualisations of the scans, fractures and predictions
-- Developed a new positive sampling strategy
-- Developed a new negative sampling strategy
-- Added a constant gaussian noise augmentation
 
 
 
 ## Abstract
-**Background**: Diagnosis of rib fractures plays an important role in identifying trauma severity. However, quickly and precisely identifying the rib fractures in a large number of CT images with increasing number of patients is a tough task, which is also subject to the qualification of radiologist. We aim at a clinically applicable automatic system for rib fracture detection and segmentation from CT scans.
+This paper focuses on the detection of rib fractures, which is crucial for accurate diagnosis and timely intervention in cases of trauma-related injuries. As part of the RibFrac 2020 Challenge, the aim is to build upon the FracNet baseline model using various augmentation techniques, such as adding Gaussian noise, mirroring, or positive and negative sampling. The combined application of these techniques led to an improvement of 15% over the baseline in terms of the Free-Response Receiver Operating Characteristic (FROC) score. Potential future research could investigate the effectiveness of integrating diffusion-based techniques for enhanced semantic information extraction.
 
-**Methods**: A total of 7,473 annotated traumatic rib fractures from 900 patients in a single center were enrolled into our dataset, named RibFrac Dataset, which were annotated with a human-in-the-loop labeling procedure. We developed a deep learning model, named FracNet, to detect and segment rib fractures. 720, 60 and 120 patients were randomly split as training cohort, tuning cohort and test cohort, respectively. FreeResponse ROC (FROC) analysis was used to evaluate the sensitivity and false positives of the detection performance, and Intersection-over-Union (IoU) and Dice Coefficient (Dice) were used to evaluate the segmentation performance of predicted rib fractures. Observer studies, including independent human-only study and human-collaboration study, were used to benchmark the FracNet with human performance and evaluate its clinical applicability. A annotated subset of RibFrac Dataset, including 420 for training, 60 for tuning and 120 for test, as well as our code for model training and evaluation, was open to research community to facilitate both clinical and engineering research.
+## Introduction
+The past years have witnessed significant advancements in the field of medical imaging, with deep learning and computer vision being at the forefront of such developments [1, 2]. The ultimate goal of such technologies is to improve the diagnostic precision of medical imaging and automatize the diagnosis process. Automating this process would alleviate the arduous and time-consuming nature of this task, allowing professional radiologists to focus on other duties.
 
-**Findings**: Our method achieved a detection sensitivity of 92.9% with 5.27 false positives per scan and a segmentation Dice of 71.5% on the test cohort. Human experts achieved much lower false positives per scan, while underperforming the deep neural networks in terms of detection sensitivities with longer time in diagnosis. With human-computer collobration, human experts achieved higher detection sensitivities than human-only or computer-only diagnosis.
+One specific application of such advancements comes in the form of rib fracture detection, a frequent injury resulting from various traumatic events such as accidents, falls, or sports-related incidents. In the case of rib fractures, the most common imaging modality is chest computed tomography (CT) [3], which offers a detailed representation of the ribs and the surrounding area. The increased level of detail in CT scans offers radiologists more information for accurate diagnoses. However, this also translates to a more time-intensive process, as each rib necessitates thorough analysis from multiple perspectives. Despite this careful approach, rib fracture detection from CT scans still has a misdiagnosis rate of between 19.2% to 26.8% [4, 5] which has serious implications for patients' well-being. Indeed, mortality rates tend to increase with the number of rib fractures [3], underscoring the need for accurate and early detection of rib fractures.
 
-**Interpretation**: The proposed FracNet provided increasing detection sensitivity of rib fractures with significantly decreased clinical time consumed, which established a clinically applicable method to assist the radiologist in clinical practice.
+To this end, the 2020 Rib Fracture Detection and Classification Challenge (RibFrac Challenge) [6] aimed to provide a large-scale benchmark dataset for the analysis of automatic deep-learning models tasked with detecting and classifying around 5,000 rib fractures from 3D 660 CT scans. While the challenge has both segmentation and classification task tracks, the main focus of this paper is the segmentation part. Although significant advancements have been achieved in rib fracture detection and segmentation using deep learning models, challenges persist. Wu et al. [7] highlighted difficulties rooted in rib fracture data acquisition constraints, such as privacy, ethical considerations, robustness and generalizability. In this study, we seek to experiment with data augmentation and sampling methodologies in order to explore their influence on model robustness, generalisation capability and prevent model overfitting. Our contributions can be broken down into two main research questions:
 
-For more details, please refer to our paper: 
+- [RQ1]: How do combined techniques of variable Gaussian noise and mirroring along different axes influence the robustness, generalisability, and orientation invariance of FracNet in the context of rib fracture segmentation in chest CT scans?
 
-**Deep-learning-assisted detection and segmentation of rib fractures from CT scans: Development and validation of FracNet**
 
-*Liang Jin\*, [Jiancheng Yang](http://jiancheng-yang.com/)\*, [Kaiming Kuang](http://kaimingkuang.github.io/), [Bingbing Ni](https://scholar.google.com/citations?user=eUbmKwYAAAAJ), Yiyi Gao, Yingli Sun, Pan Gao, Weiling Ma, Mingyu Tan, Hui Kang, Jiajun Chen, Ming Li*
+- [RQ2]: How does introducing variability in the selection of positive and negative regions of interest, through additive Gaussian noise to centroids and intensity-based criteria, influence the training efficacy and overfitting prevention of FracNet in rib fracture segmentation?
 
-EBioMedicine, 2020 ([DOI](https://doi.org/10.1016/j.ebiom.2020.103106))
-
-![Alt Text](visualisations/ori_pos_sampling_viz-axial.gif)
-
-![Alt Text](visualisations/mod_pos_sampling_viz-axial.gif)
+Full paper available upon request. *Authors: Amaudruz R., Kapralova M., Palfi B., Pantea L., Turcu A*
 
 ## Code Structure
 * FracNet/
-    * [`dataset/`](./dataset): PyTorch dataset and transforms.
-    * [`models/`](./models): PyTorch 3D UNet model and losses.
-    * [`utils/`](./utils): Utility functions.
-    * [`main.py`](main.py): Training script.
+    * [`dataset/`](./dataset): PyTorch dataset and transforms
+    * [`models/`](./models): PyTorch 3D UNet model and losses
+    * [`utils/`](./utils): Utility functions
+    * [`main.py`](main.py): Training script
+    * [`predict.py`](predict.py): Inference script
+    * [`rib_fracture_viz.ipynb`](rib_fracture_viz.ipynb): Visualisation notebook
 
-## Requirements
-```
-SimpleITK==1.2.4
-fastai==1.0.59
-fastprogress==0.1.21
-matplotlib==3.1.3
-nibabel==3.0.0
-numpy>=1.18.5
-pandas>=0.25.3
-scikit-image==0.16.2
-torch==1.4.0
-tqdm==4.38.0
-```
+Below is the positive sampling from the original repo (https://github.com/M3DV/FracNet):
+
+![Alt Text](visualisations/ori_pos_sampling_viz-axial.gif)
+
+Below is the effect of the new positive sampling strategy:
+
+![Alt Text](visualisations/mod_pos_sampling_viz-axial.gif)
+
+
+More visualisations and data exploring widgets are available in the [`rib_fracture_viz.ipynb`] notebook. 
+
 
 ## Usage
 
 ### Install Required Packages
-First install required packages in [`requirements.txt`](requirements.txt) using pip:
-```bash
-pip install -r requirements.txt
-```
-or Anaconda:
-```bash
-conda install --yes --file requirements.txt
-```
-To evaluate model predictions, [the official RibFrac-Challenge repository](https://github.com/M3DV/RibFrac-Challenge) is needed. First clone the repository:
-```bash
-git clone git@github.com:M3DV/RibFrac-Challenge.git <repo_dir>
-```
-Then change the working directory and install the package:
-```bash
-cd <repo_dir>
-python setup.py install
-```
+
+
 
 ### Download the Dataset
-We collect a large-scale rib fracture CT dataset, named RibFrac Dataset as a benchmark for developping algorithms on rib fracture detection, segmentation and classification. You may access the public part of RibFrac dataset via [RibFrac Challenge](https://ribfrac.grand-challenge.org/dataset/) website after one-click free registeration, which was an official MICCAI 2020 challenge. There is slight difference with the public dataset in this paper and that in the RibFrac Challenge, please refer to the [RibFrac Challenge](https://ribfrac.grand-challenge.org/tasks/) website for details.
-
+To run the files and the notebook, you will need to download the rib fracture dataset here: [RibFrac Challenge](https://ribfrac.grand-challenge.org/dataset/).
 ### Training
 To train the FracNet model, run the following in command line:
 ```bash
-python -m main --train_image_dir <training_image_directory> --train_label_dir <training_label_directory> --val_image_dir <validation_image_directory> --val_label_dir <validation_label_directory>
+python main
 ```
 
 ### Prediction
 To generate prediction, run the following in command line:
 ```bash
-python -m predict --image_dir <image_directory> --pred_dir <predition_directory> --model_path <model_weight_path>
+python predict 
 ```
 
-In the [predict.py](predict.py), we adopt a post-processing procedure of [removing low-probability regions](predict.py#L18), [spine regions](predict.py#L24), and [small objects](predict.py#L48). This procedure leads to fewer false negatives. You may also skip the post-processing by setting `--postprocess False` in the command line argument and check the raw output.
+***Note 1***: This repo is a fork of https://github.com/M3DV/FracNet.
 
-***Note 1***: This project aims at a prototype for RibFrac Challenge; However, as the challenge data provider, we would like to avoid unintended data leakage. Therefore, we did **NOT** provide all details for the models, including those in both training and inference stages. Nevertheless, it is guaranteed that the performance in the EBioMedicine'20 paper could be reproduced with this one-stage FracNet using 3D UNet as backbone, but also note that 1) it is trained with challenge data and extra in-house data, 2) there is heavy pre-processing and post-processing (including *rib segmentation*). See more discussion in this [issue](https://github.com/M3DV/FracNet/issues/7).
 
-***Note 2***: Our paper on rib segmentation and centerline extraction has been accepted by [MICCAI'21](https://arxiv.org/abs/2109.09521). Feel free to check it ;)
+## References
 
-### Evaluation
-To evaluate your prediction, run the following in command line:
-```bash
-python -m ribfrac.evaluation --gt_dir <gt_directory> -pred_dir <prediction_directory> --clf False
-```
+[1] Y. Zhan, Y. Wang, W. Zhang, B. Ying, and C. Wang, “Diagnostic accuracy of the artificial intelligence methods in medical imaging for pulmonary tuberculosis: A systematic review and meta-analysis” Journal of Clinical Medicine, vol. 12, no. 1, 2023.[Online]. Available: https://www.mdpi.com/2077-0383/12/1/303
+
+[2] R. Aggarwal, V. Sounderajah, G. Martin, D. S. Ting, A. Karthikesalingam, D. King, H. Ashrafian, and A. Darzi, “Diagnostic accuracy of deep learning in medical imaging: a systematic review and meta-analysis” NPJ digital medicine, vol. 4, no. 1, p. 65, 2021.
+
+[3] B. S. Talbot, C. P. Gange Jr, A. Chaturvedi, N. Klionsky, S. K. Hobbs, and A. Chaturvedi, “Traumatic rib injury: patterns, imaging pitfalls, complications, and treatment” Radiographics, vol. 37, no. 2, pp. 628–651, 2017.
+
+[4] S. Cho, Y. Sung, and M. Kim, “Missed rib fractures on evaluation of initial chest ct for trauma patients: pattern analysis and diagnostic value of coronal multiplanar reconstruction images with multidetector row ct” The British journal of radiology, vol. 85, no. 1018, pp. e845–e850, 2012.
+
+[5] L. Yao, X. Guan, X. Song, Y. Tan, C. Wang, C. Jin, M. Chen, H. Wang, and M. Zhang, “Rib fracture detection system based on deep learning” Scientific reports, vol. 11, no. 1, p. 23513, 2021.
+
+[6] L. Jin, J. Yang, K. Kuang, B. Ni, Y. Gao, Y. Sun, P. Gao, W. Ma, M. Tan, H. Kang, J. Chen, and M. Li, “Deep-learning-assisted detection and segmentation of rib fractures from ct scans: Development and validation of fracnet” EBioMedicine, 2020.
+
+[7] M. Wu, Z. Chai, G. Qian, H. Lin, Q. Wang, L. Wang, and H. Chen, “Development and evaluation of a deep learning algorithm for rib segmentation and fracture detection from multicenter chest ct images” Radiology: Artificial Intelligence, vol. 3, p. e200248, 2021.
+
+[8] T. Falk, D. Mai, R. Bensch, &Ouml;. &Ccedil;i&ccedil;ek, A. Abdulkadir, Y. Marrakchi, A. B&ouml;hm, J. Deubner, Z. J&auml;ckel, K. Seiwald et al., “U-net: deep learning for cell counting, detection, and morphometry” Nature methods, vol. 16, no. 1, pp. 67–70, 2019
+
+
