@@ -143,11 +143,11 @@ class FracNetTrainDataset(Dataset):
             roi_centroids = pos_centroids + neg_centroids
         else:
             roi_centroids = [list(range(0, x, y // 2))[1:-1] + [x - y // 2]
-                for x, y in zip(label_arr.shape, self.crop_size)]
+                             for x, y in zip(label_arr.shape, self.crop_size)]
             roi_centroids = list(product(*roi_centroids))
 
         roi_centroids = [tuple([int(x) for x in centroid])
-            for centroid in roi_centroids]
+                         for centroid in roi_centroids]
 
         return roi_centroids
 
@@ -155,22 +155,22 @@ class FracNetTrainDataset(Dataset):
         roi = np.ones(tuple([self.crop_size] * 3)) * (-1024)
 
         src_beg = [max(0, centroid[i] - self.crop_size // 2)
-            for i in range(len(centroid))]
+                   for i in range(len(centroid))]
         src_end = [min(arr.shape[i], centroid[i] + self.crop_size // 2)
-            for i in range(len(centroid))]
+                   for i in range(len(centroid))]
         dst_beg = [max(0, self.crop_size // 2 - centroid[i])
-            for i in range(len(centroid))]
+                   for i in range(len(centroid))]
         dst_end = [min(arr.shape[i] - (centroid[i] - self.crop_size // 2),
-            self.crop_size) for i in range(len(centroid))]
+                       self.crop_size) for i in range(len(centroid))]
         roi[
-            dst_beg[0]:dst_end[0],
-            dst_beg[1]:dst_end[1],
-            dst_beg[2]:dst_end[2],
+        dst_beg[0]:dst_end[0],
+        dst_beg[1]:dst_end[1],
+        dst_beg[2]:dst_end[2],
         ] = arr[
             src_beg[0]:src_end[0],
             src_beg[1]:src_end[1],
             src_beg[2]:src_end[2],
-        ]
+            ]
 
         return roi
 
@@ -201,19 +201,19 @@ class FracNetTrainDataset(Dataset):
 
         # crop rois
         image_rois = [self._crop_roi(image_arr, centroid)
-            for centroid in roi_centroids]
+                      for centroid in roi_centroids]
         label_rois = [self._crop_roi(label_arr, centroid)
-            for centroid in roi_centroids]
+                      for centroid in roi_centroids]
 
         if self.transforms is not None:
             image_rois = [self._apply_transforms(image_roi)
-                for image_roi in image_rois]
+                          for image_roi in image_rois]
 
         image_rois = torch.tensor(np.stack(image_rois)[:, np.newaxis],
-            dtype=torch.float)
+                                  dtype=torch.float)
         label_rois = (np.stack(label_rois) > 0).astype(np.float)
         label_rois = torch.tensor(label_rois[:, np.newaxis],
-            dtype=torch.float)
+                                  dtype=torch.float)
 
         return image_rois, label_rois
 
@@ -227,7 +227,7 @@ class FracNetTrainDataset(Dataset):
     @staticmethod
     def get_dataloader(dataset, batch_size, shuffle=False, num_workers=0):
         return DataLoader(dataset, batch_size, shuffle,
-            num_workers=num_workers, collate_fn=FracNetTrainDataset.collate_fn)
+                          num_workers=num_workers, collate_fn=FracNetTrainDataset.collate_fn)
 
 
 class FracNetInferenceDataset(Dataset):
@@ -241,8 +241,8 @@ class FracNetInferenceDataset(Dataset):
         self.centers = self._get_centers()
 
     def _get_centers(self):
-        dim_coords = [list(range(0, dim, self.crop_size // 2))[1:-1]\
-            + [dim - self.crop_size // 2] for dim in self.image.shape]
+        dim_coords = [list(range(0, dim, self.crop_size // 2))[1:-1] \
+                      + [dim - self.crop_size // 2] for dim in self.image.shape]
         centers = list(product(*dim_coords))
 
         return centers
@@ -253,10 +253,10 @@ class FracNetInferenceDataset(Dataset):
     def _crop_patch(self, idx):
         center_x, center_y, center_z = self.centers[idx]
         patch = self.image[
-            center_x - self.crop_size // 2:center_x + self.crop_size // 2,
-            center_y - self.crop_size // 2:center_y + self.crop_size // 2,
-            center_z - self.crop_size // 2:center_z + self.crop_size // 2
-        ]
+                center_x - self.crop_size // 2:center_x + self.crop_size // 2,
+                center_y - self.crop_size // 2:center_y + self.crop_size // 2,
+                center_z - self.crop_size // 2:center_z + self.crop_size // 2
+                ]
 
         return patch
 
@@ -287,4 +287,4 @@ class FracNetInferenceDataset(Dataset):
     @staticmethod
     def get_dataloader(dataset, batch_size, num_workers=0):
         return DataLoader(dataset, batch_size, num_workers=num_workers,
-            collate_fn=FracNetInferenceDataset._collate_fn)
+                          collate_fn=FracNetInferenceDataset._collate_fn)
