@@ -19,7 +19,9 @@ To this end, the 2020 Rib Fracture Detection and Classification Challenge (RibFr
 
 - [RQ2]: How does introducing variability in the selection of positive and negative regions of interest, through additive Gaussian noise to centroids and intensity-based criteria, influence the training efficacy and overfitting prevention of FracNet in rib fracture segmentation?
 
-Full paper available upon request. *Authors: Amaudruz R., Kapralova M., Palfi B., Pantea L., Turcu A*
+Full paper available upon request. 
+
+Authors: *Amaudruz R., Kapralova M., Palfi B., Pantea L., Turcu A*
 
 ## Code Structure
 * FracNet/
@@ -51,6 +53,41 @@ More visualisations and data exploring widgets are available in the [`rib_fractu
 
 ### Download the Dataset
 To run the files, you will need to download the rib fracture dataset here: [RibFrac Challenge](https://ribfrac.grand-challenge.org/dataset/).
+
+<details>
+<summary>
+Data folder organisation
+</summary>
+
+```bash
+data/
+    └──train/
+        ├── ribfrac-train-images/
+            ├── RibFrac1-image.nii.gz
+            ├── RibFrac2-image.nii.gz
+            └── ...
+        └── ribfrac-train-labels/
+            ├── RibFrac1-label.nii.gz
+            ├── RibFrac2-label.nii.gz
+            └── ...
+    └──val/
+        ├── ribfrac-val-images/
+            ├── RibFrac421-image.nii.gz
+            ├── RibFrac422-image.nii.gz
+            └── ...
+        └── ribfrac-val-labels/
+            ├── RibFrac421-label.nii.gz
+            ├── RibFrac422-label.nii.gz
+            └── ...
+    └──test/
+        ├── ribfrac-test-images/
+            ├── RibFrac501-image.nii.gz
+            ├── RibFrac502-image.nii.gz
+            └── ...
+```
+</details>
+
+
 ### Training
 To train the FracNet model, run the following in command line:
 ```bash
