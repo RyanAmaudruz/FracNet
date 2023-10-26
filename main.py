@@ -1,18 +1,15 @@
 import os
 import torch
 import argparse
-import numpy as np
 import torch.nn as nn
 import wandb
 
 from wandb.fastai import WandbCallback
 from functools import partial
-from torch import save
 
 from fastai.basic_train import Learner
 from fastai.train import ShowGraph, SaveModelCallback
 from fastai.data_block import DataBunch
-from torch import optim
 
 from dataset.fracnet_dataset import FracNetTrainDataset
 from dataset import transforms as tsfm

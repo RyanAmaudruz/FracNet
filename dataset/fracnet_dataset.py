@@ -26,7 +26,13 @@ class FracNetTrainDataset(Dataset):
 
     @staticmethod
     def _get_pos_centroids(label_arr):
-        # centroids = [tuple([round(x)  for x in prop.centroid]) for prop in regionprops(label_arr)]
+        """
+        Method loops thought the fracture centroids, adds gaussian noise to centroid and returns the list of centroids
+        with noise
+
+        :param label_arr: Array containing the labels.
+        :return:
+        """
         label_arr_shape = label_arr.shape
         centroids = []
         for prop in regionprops(label_arr):
@@ -44,7 +50,6 @@ class FracNetTrainDataset(Dataset):
     @staticmethod
     def _get_symmetric_neg_centroids(pos_centroids, x_size):
         sym_neg_centroids = [(x_size - x, y, z) for x, y, z in pos_centroids]
-
         return sym_neg_centroids
 
     @staticmethod
@@ -84,6 +89,14 @@ class FracNetTrainDataset(Dataset):
         return src_beg, src_end, dst_beg, dst_end
 
     def _new_get_neg_centroids(self, image_arr, n_centroids=10):
+        """
+        This method randomly samples from the volume candidate RoIs.
+        If the RoI contains at least one voxel with a value of 300, the candidate is confirmed.
+
+        :param image_arr:
+        :param n_centroids:
+        :return:
+        """
         new_neg_centroids = []
         for _ in range(n_centroids):
             while True:
@@ -110,9 +123,6 @@ class FracNetTrainDataset(Dataset):
             neg_centroids = self._get_neg_centroids(pos_centroids, label_arr.shape)
 
             neg_centroids += self._new_get_neg_centroids(image_arr, n_centroids=len(neg_centroids))
-
-            # neg_centroids = self._new_get_neg_centroids(image_arr)
-
 
             # sample positives and negatives when necessary
             num_pos = len(pos_centroids)
