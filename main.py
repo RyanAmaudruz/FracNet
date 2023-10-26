@@ -48,7 +48,7 @@ def main(args):
     first_out_channels = args.first_out_channels
     model = UNet(in_channels, out_channels, first_out_channels)
     model = model.to(device)
-    optimizer = torch.optim.SGD
+    optimizer = torch.optim.Adam
     model_weight_filename = f'{str(model)}_batch-{batch_size}_epoch-{epochs}_lr-{lr_max}'
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model.cuda())
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             self.save_model = True
             self.batch_size = 16
             self.epochs = 250
-            self.lr_max = 0.1
+            self.lr_max = 0.01
             self.num_workers = 4
             self.thresh = 0.1
             self.in_channels = 1
