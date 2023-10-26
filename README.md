@@ -49,6 +49,15 @@ More visualisations and data exploring widgets are available in the [`rib_fractu
 
 ### Install Required Packages
 
+To install the main repo environment, run the following in command line:
+```bash
+conda env create -f environment_gpu.yml
+```
+To install the visualisation environment, run the following in command line:
+```bash
+conda env create -f fracnet_viz_environment.yml
+```
+
 
 
 ### Download the Dataset
