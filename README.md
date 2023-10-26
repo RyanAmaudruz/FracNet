@@ -34,6 +34,7 @@ Below is the positive sampling from the original repo (https://github.com/M3DV/F
 
 ![Alt Text](visualisations/ori_pos_sampling_viz-axial.gif)
 
+The fracture is displayed in <font color="red">red</font> and the positive sample fed to the model in <font color="blue">blue</font>.
 Below is the effect of the new positive sampling strategy:
 
 ![Alt Text](visualisations/mod_pos_sampling_viz-axial.gif)
@@ -49,7 +50,7 @@ More visualisations and data exploring widgets are available in the [`rib_fractu
 
 
 ### Download the Dataset
-To run the files and the notebook, you will need to download the rib fracture dataset here: [RibFrac Challenge](https://ribfrac.grand-challenge.org/dataset/).
+To run the files, you will need to download the rib fracture dataset here: [RibFrac Challenge](https://ribfrac.grand-challenge.org/dataset/).
 ### Training
 To train the FracNet model, run the following in command line:
 ```bash
@@ -62,7 +63,7 @@ To generate prediction, run the following in command line:
 python predict 
 ```
 
-***Note 1***: This repo is a fork of https://github.com/M3DV/FracNet.
+***Note***: This repo is a fork of https://github.com/M3DV/FracNet.
 
 
 ## References
