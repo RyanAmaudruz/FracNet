@@ -99,13 +99,13 @@ data/
 ### Training
 To train the FracNet model, run the following in command line:
 ```bash
-python main
+python main.py
 ```
 
 ### Prediction
 To generate prediction, run the following in command line:
 ```bash
-python predict 
+python predict.py 
 ```
 
 ***Note***: This repo is a fork of https://github.com/M3DV/FracNet.
